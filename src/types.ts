@@ -34,7 +34,8 @@ export type FieldType =
   | 'file'
   | 'rating'
   | 'slider'
-  | 'autocomplete';
+  | 'autocomplete'
+  | 'datagrid';
 
 export interface SelectOption {
   value: string | number;
@@ -99,6 +100,160 @@ export interface AutocompleteField extends FormFieldBase {
   multiple?: boolean;
 }
 
+export interface DataGridColumn {
+  field: string;
+  headerName: string;
+  displayName?: string;
+  type?: 'string' | 'number' | 'date' | 'boolean' | 'select';
+  dataType?: 'varchar' | 'int' | 'decimal' | 'float' | 'datetime' | 'date' | 'boolean' | 'text' | 'uuid' | 'json';
+  width?: number;
+  minWidth?: number;
+  maxWidth?: number;
+  editable?: boolean;
+  required?: boolean;
+  isPrimaryKey?: boolean;
+  isUnique?: boolean;
+  isIndexed?: boolean;
+  sortable?: boolean;
+  filterable?: boolean;
+  order?: number;
+  defaultValue?: any;
+  gridDisplayOption?: 'visible' | 'hidden' | 'readonly' | 'editable';
+  format?: {
+    type: 'none' | 'financial' | 'date' | 'percentage' | 'custom';
+    pattern?: string; // For custom formatting
+    currency?: string; // For financial formatting
+    dateFormat?: string; // For date formatting
+    decimals?: number; // For numeric formatting
+  };
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  formatLookup?: {
+    enabled: boolean;
+    endpoint?: string;
+    method?: 'GET' | 'POST';
+    valueField?: string;
+    displayField?: string;
+    params?: Record<string, any>;
+  };
+  lookupAttributes?: {
+    enabled: boolean;
+    source: 'static' | 'api' | 'function';
+    staticData?: Array<{ value: any; label: string }>;
+    apiConfig?: {
+      endpoint: string;
+      method?: 'GET' | 'POST';
+      valueField: string;
+      labelField: string;
+      params?: Record<string, any>;
+      headers?: Record<string, string>;
+      searchParam?: string; // Parameter name for search queries
+    };
+    functionConfig?: {
+      name: string; // Function name to call
+      params?: Record<string, any>;
+    };
+  };
+  validation?: {
+    min?: number;
+    max?: number;
+    minLength?: number;
+    maxLength?: number;
+    pattern?: string;
+    custom?: (value: any) => string | null;
+  };
+  options?: SelectOption[]; // For select type columns
+  apiConfig?: {
+    endpoint?: string;
+    valueField?: string;
+    labelField?: string;
+    params?: Record<string, any>;
+    headers?: Record<string, string>;
+    method?: 'GET' | 'POST';
+  };
+}
+
+export interface DataGridField extends FormFieldBase {
+  type: 'datagrid';
+  columns: DataGridColumn[];
+  minRows?: number;
+  maxRows?: number;
+  allowAdd?: boolean;
+  allowDelete?: boolean;
+  allowEdit?: boolean;
+  allowReorder?: boolean;
+  allowSort?: boolean;
+  allowFilter?: boolean;
+  initialRows?: any[];
+  eventButtons?: {
+    insert?: {
+      enabled: boolean;
+      label?: string;
+      position?: 'top' | 'bottom' | 'both';
+      icon?: string;
+      style?: Record<string, any>;
+      permissions?: string[];
+    };
+    update?: {
+      enabled: boolean;
+      label?: string;
+      position?: 'row' | 'toolbar' | 'both';
+      icon?: string;
+      style?: Record<string, any>;
+      permissions?: string[];
+      mode?: 'inline' | 'dialog' | 'page';
+    };
+    delete?: {
+      enabled: boolean;
+      label?: string;
+      position?: 'row' | 'toolbar' | 'both';
+      icon?: string;
+      style?: Record<string, any>;
+      permissions?: string[];
+      confirmDialog?: boolean;
+      confirmMessage?: string;
+    };
+  };
+  dataSource?: {
+    type: 'static' | 'api';
+    apiConfig?: {
+      endpoint: string;
+      method?: 'GET' | 'POST';
+      headers?: Record<string, string>;
+      params?: Record<string, any>;
+      dataPath?: string; // JSONPath to extract data from response
+      totalPath?: string; // JSONPath to extract total count
+      errorPath?: string; // JSONPath to extract error message
+    };
+    pagination?: {
+      enabled: boolean;
+      pageSize: number;
+      serverSide?: boolean;
+    };
+    caching?: {
+      enabled: boolean;
+      ttl?: number; // Time to live in seconds
+    };
+  };
+  actions?: {
+    onCreate?: {
+      endpoint: string;
+      method?: 'POST' | 'PUT';
+      headers?: Record<string, string>;
+    };
+    onUpdate?: {
+      endpoint: string;
+      method?: 'PUT' | 'PATCH';
+      headers?: Record<string, string>;
+    };
+    onDelete?: {
+      endpoint: string;
+      method?: 'DELETE';
+      headers?: Record<string, string>;
+    };
+  };
+}
+
 export type FormField = 
   | FormFieldBase
   | SelectField
@@ -109,7 +264,8 @@ export type FormField =
   | FileField
   | RatingField
   | SliderField
-  | AutocompleteField;
+  | AutocompleteField
+  | DataGridField;
 
 export interface ValidationRule {
   type: 'required' | 'minLength' | 'maxLength' | 'pattern' | 'custom';

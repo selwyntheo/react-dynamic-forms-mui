@@ -7,7 +7,9 @@
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "rollup -c",
@@ -15,14 +17,19 @@
     "test": "echo \"No tests specified\"",
     "lint": "eslint src/**/*.{ts,tsx}",
     "lint:fix": "eslint src/**/*.{ts,tsx} --fix",
-    "demo": "vite serve --port 3000"
+    "demo": "vite serve --port 3000",
+    "prepublishOnly": "npm run build",
+    "prepare": "npm run build",
+    "preversion": "npm run lint && npm run build",
+    "version": "git add -A src",
+    "postversion": "git push && git push --tags"
   },
   "peerDependencies": {
     "@emotion/react": ">=11.0.0",
     "@emotion/styled": ">=11.0.0",
     "@mui/material": ">=5.0.0",
-    "react": ">=16.8.0",
-    "react-dom": ">=16.8.0"
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0"
   },
   "devDependencies": {
     "@emotion/react": "^11.14.0",
@@ -32,16 +39,16 @@
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-node-resolve": "^15.0.0",
     "@rollup/plugin-typescript": "^11.0.0",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vitejs/plugin-react": "^4.0.0",
     "eslint": "^8.0.0",
     "eslint-plugin-react": "^7.32.0",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "rollup": "^3.0.0",
     "rollup-plugin-dts": "^6.0.0",
     "tslib": "^2.8.1",
@@ -55,12 +62,28 @@
     "material-ui",
     "mui",
     "form-builder",
-    "typescript"
+    "typescript",
+    "datagrid",
+    "crud",
+    "validation",
+    "form-validation",
+    "react-components",
+    "ui-components",
+    "responsive",
+    "inline-editing"
   ],
-  "author": "Your Name",
+  "author": "selwyntheo",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/react-dynamic-forms-mui.git"
+    "url": "https://github.com/selwyntheo/react-dynamic-forms-mui.git"
+  },
+  "homepage": "https://github.com/selwyntheo/react-dynamic-forms-mui#readme",
+  "bugs": {
+    "url": "https://github.com/selwyntheo/react-dynamic-forms-mui/issues"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
   }
 }

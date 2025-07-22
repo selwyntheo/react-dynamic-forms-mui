@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataGrid Demo - Dynamic Forms MUI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://unpkg.com/react@19/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@19/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@mui/material@6.2.0/umd/material-ui.development.js"></script>
+    <script src="./dist/index.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+        }
+        #root {
+            min-height: 100vh;
+        }
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        .demo-section {
+            margin-bottom: 32px;
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1976d2;
+        }
+        .section-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+        const { 
+            ThemeProvider, createTheme, CssBaseline, 
+            Container, Typography, Box, Paper, 
+            Chip, Grid, Card, CardContent, Divider 
+        } = MaterialUI;
+
+        // Create MUI theme
+        const theme = createTheme({
+            palette: {
+                primary: {
+                    main: '#1976d2',
+                },
+                secondary: {
+                    main: '#dc004e',
+                },
+                background: {
+                    default: '#f5f5f5',
+                    paper: '#ffffff',
+                },
+            },
+            typography: {
+                fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+                h4: {
+                    fontWeight: 600,
+                    fontSize: '2.125rem',
+                    lineHeight: 1.235,
+                },
+                h5: {
+                    fontWeight: 500,
+                    fontSize: '1.5rem',
+                    lineHeight: 1.334,
+                },
+                h6: {
+                    fontWeight: 500,
+                    fontSize: '1.25rem',
+                    lineHeight: 1.6,
+                },
+                subtitle1: {
+                    fontWeight: 500,
+                    fontSize: '1rem',
+                    lineHeight: 1.75,
+                },
+                subtitle2: {
+                    fontWeight: 500,
+                    fontSize: '0.875rem',
+                    lineHeight: 1.57,
+                },
+                body1: {
+                    fontSize: '1rem',
+                    lineHeight: 1.5,
+                },
+                body2: {
+                    fontSize: '0.875rem',
+                    lineHeight: 1.43,
+                },
+            },
+            components: {
+                MuiPaper: {
+                    styleOverrides: {
+                        root: {
+                            borderRadius: 12,
+                        },
+                    },
+                },
+                MuiButton: {
+                    styleOverrides: {
+                        root: {
+                            borderRadius: 8,
+                            textTransform: 'none',
+                            fontWeight: 500,
+                        },
+                    },
+                },
+                MuiTextField: {
+                    styleOverrides: {
+                        root: {
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: 8,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        // Sample form configuration with DataGrid fields
+        const dataGridFormConfig = {
+            title: "DataGrid Demo Form",
+            description: "Demonstrating dynamic data grid functionality with various column types",
+            sections: [
+                {
+                    id: "main-section",
+                    title: "DataGrid Examples",
+                    fields: [
+                        {
+                            id: "team_members",
+                            name: "team_members",
+                            label: "Team Members",
+                            type: "datagrid",
+                            required: false,
+                            columns: [
+                                { 
+                                    field: 'name', 
+                                    headerName: 'Full Name', 
+                                    type: 'string', 
+                                    editable: true, 
+                                    required: true,
+                                    width: 200
+                                },
+                                { 
+                                    field: 'email', 
+                                    headerName: 'Email', 
+                                    type: 'string', 
+                                    editable: true, 
+                                    required: true,
+                                    width: 250
+                                },
+                                { 
+                                    field: 'role', 
+                                    headerName: 'Role', 
+                                    type: 'select', 
+                                    editable: true, 
+                                    required: true,
+                                    options: [
+                                        { value: 'developer', label: 'Developer' },
+                                        { value: 'designer', label: 'Designer' },
+                                        { value: 'manager', label: 'Manager' },
+                                        { value: 'qa', label: 'QA Engineer' }
+                                    ],
+                                    width: 150
+                                },
+                                { 
+                                    field: 'salary', 
+                                    headerName: 'Salary', 
+                                    type: 'number', 
+                                    editable: true, 
+                                    required: false,
+                                    width: 120
+                                },
+                                { 
+                                    field: 'startDate', 
+                                    headerName: 'Start Date', 
+                                    type: 'date', 
+                                    editable: true, 
+                                    required: false,
+                                    width: 150
+                                },
+                                { 
+                                    field: 'active', 
+                                    headerName: 'Active', 
+                                    type: 'boolean', 
+                                    editable: true, 
+                                    required: false,
+                                    width: 100
+                                }
+                            ],
+                            initialData: [
+                                { 
+                                    id: 1, 
+                                    name: 'John Doe', 
+                                    email: 'john.doe@example.com', 
+                                    role: 'developer', 
+                                    salary: 75000, 
+                                    startDate: '2023-01-15',
+                                    active: true 
+                                },
+                                { 
+                                    id: 2, 
+                                    name: 'Jane Smith', 
+                                    email: 'jane.smith@example.com', 
+                                    role: 'designer', 
+                                    salary: 70000, 
+                                    startDate: '2023-02-01',
+                                    active: true 
+                                },
+                                { 
+                                    id: 3, 
+                                    name: 'Mike Johnson', 
+                                    email: 'mike.johnson@example.com', 
+                                    role: 'manager', 
+                                    salary: 85000, 
+                                    startDate: '2022-12-01',
+                                    active: false 
+                                }
+                            ],
+                            canAdd: true,
+                            canEdit: true,
+                            canDelete: true,
+                            maxRows: 10
+                        },
+                        {
+                            id: "project_tasks",
+                            name: "project_tasks", 
+                            label: "Project Tasks",
+                            type: "datagrid",
+                            required: false,
+                            columns: [
+                                { 
+                                    field: 'task', 
+                                    headerName: 'Task Name', 
+                                    type: 'string', 
+                                    editable: true, 
+                                    required: true,
+                                    width: 250
+                                },
+                                { 
+                                    field: 'priority', 
+                                    headerName: 'Priority', 
+                                    type: 'select', 
+                                    editable: true, 
+                                    required: true,
+                                    options: [
+                                        { value: 'low', label: 'Low' },
+                                        { value: 'medium', label: 'Medium' },
+                                        { value: 'high', label: 'High' },
+                                        { value: 'urgent', label: 'Urgent' }
+                                    ],
+                                    width: 120
+                                },
+                                { 
+                                    field: 'estimatedHours', 
+                                    headerName: 'Est. Hours', 
+                                    type: 'number', 
+                                    editable: true, 
+                                    required: false,
+                                    width: 120
+                                },
+                                { 
+                                    field: 'dueDate', 
+                                    headerName: 'Due Date', 
+                                    type: 'date', 
+                                    editable: true, 
+                                    required: false,
+                                    width: 150
+                                },
+                                { 
+                                    field: 'completed', 
+                                    headerName: 'Completed', 
+                                    type: 'boolean', 
+                                    editable: true, 
+                                    required: false,
+                                    width: 120
+                                }
+                            ],
+                            initialData: [
+                                { 
+                                    id: 1, 
+                                    task: 'Setup project structure', 
+                                    priority: 'high', 
+                                    estimatedHours: 8, 
+                                    dueDate: '2024-01-15',
+                                    completed: true 
+                                },
+                                { 
+                                    id: 2, 
+                                    task: 'Design user interface', 
+                                    priority: 'medium', 
+                                    estimatedHours: 24, 
+                                    dueDate: '2024-01-20',
+                                    completed: false 
+                                },
+                                { 
+                                    id: 3, 
+                                    task: 'Implement authentication', 
+                                    priority: 'high', 
+                                    estimatedHours: 16, 
+                                    dueDate: '2024-01-25',
+                                    completed: false 
+                                }
+                            ],
+                            canAdd: true,
+                            canEdit: true,
+                            canDelete: true,
+                            maxRows: 20
+                        },
+                        {
+                            id: "budget_items",
+                            name: "budget_items",
+                            label: "Budget Items (Read-only Example)",
+                            type: "datagrid",
+                            required: false,
+                            columns: [
+                                { 
+                                    field: 'category', 
+                                    headerName: 'Category', 
+                                    type: 'string', 
+                                    editable: false, 
+                                    required: true,
+                                    width: 200
+                                },
+                                { 
+                                    field: 'amount', 
+                                    headerName: 'Amount ($)', 
+                                    type: 'number', 
+                                    editable: false, 
+                                    required: true,
+                                    width: 150
+                                },
+                                { 
+                                    field: 'approved', 
+                                    headerName: 'Approved', 
+                                    type: 'boolean', 
+                                    editable: false, 
+                                    required: false,
+                                    width: 120
+                                }
+                            ],
+                            initialData: [
+                                { id: 1, category: 'Development Tools', amount: 5000, approved: true },
+                                { id: 2, category: 'Marketing', amount: 10000, approved: false },
+                                { id: 3, category: 'Infrastructure', amount: 8000, approved: true }
+                            ],
+                            canAdd: false,
+                            canEdit: false,
+                            canDelete: false,
+                            maxRows: 5
+                        }
+                    ]
+                }
+            ]
+        };
+
+        function DataGridDemo() {
+            const [formData, setFormData] = useState({});
+
+            const handleFieldChange = (fieldName, value) => {
+                setFormData(prev => ({
+                    ...prev,
+                    [fieldName]: value
+                }));
+            };
+
+            const handleSubmit = (data) => {
+                console.log('Form submitted with data:', data);
+                alert('Form submitted! Check console for details.');
+            };
+
+            return (
+                <ThemeProvider theme={theme}>
+                    <CssBaseline />
+                    <Container maxWidth="xl" sx={{ py: 4 }}>
+                        {/* Header */}
+                        <Box sx={{ mb: 4, textAlign: 'center' }}>
+                            <Typography variant="h4" component="h1" gutterBottom>
+                                DataGrid Demo
+                            </Typography>
+                            <Typography variant="subtitle1" color="text.secondary">
+                                Interactive data grids with inline editing, CRUD operations, and multiple column types
+                            </Typography>
+                        </Box>
+
+                        {/* Features Overview */}
+                        <Paper sx={{ p: 3, mb: 4, backgroundColor: '#f8f9fa' }}>
+                            <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+                                ✨ DataGrid Features
+                            </Typography>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Chip 
+                                        label="Inline Editing" 
+                                        variant="outlined" 
+                                        color="primary" 
+                                        size="small" 
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Chip 
+                                        label="Add/Delete Rows" 
+                                        variant="outlined" 
+                                        color="primary" 
+                                        size="small" 
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Chip 
+                                        label="Multiple Column Types" 
+                                        variant="outlined" 
+                                        color="primary" 
+                                        size="small" 
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Chip 
+                                        label="Data Validation" 
+                                        variant="outlined" 
+                                        color="primary" 
+                                        size="small" 
+                                    />
+                                </Grid>
+                            </Grid>
+                            <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
+                                Supported column types: String, Number, Date, Select (dropdown), Boolean (checkbox)
+                            </Typography>
+                        </Paper>
+
+                        {/* Dynamic Form with DataGrids */}
+                        <Paper sx={{ p: 3 }}>
+                            <ReactDynamicFormsMUI.DynamicForm
+                                config={dataGridFormConfig}
+                                onSubmit={handleSubmit}
+                                onChange={handleFieldChange}
+                                data={formData}
+                            />
+                        </Paper>
+
+                        {/* Instructions */}
+                        <Paper sx={{ p: 3, mt: 4, backgroundColor: '#e3f2fd' }}>
+                            <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+                                🔧 How to Use
+                            </Typography>
+                            <Box component="ul" sx={{ pl: 2, color: 'text.secondary' }}>
+                                <Typography component="li" variant="body2" sx={{ mb: 1 }}>
+                                    <strong>Edit cells:</strong> Click on any editable cell to modify its value
+                                </Typography>
+                                <Typography component="li" variant="body2" sx={{ mb: 1 }}>
+                                    <strong>Add rows:</strong> Click the "Add Row" button and fill in the dialog
+                                </Typography>
+                                <Typography component="li" variant="body2" sx={{ mb: 1 }}>
+                                    <strong>Delete rows:</strong> Click the delete icon in the row actions column
+                                </Typography>
+                                <Typography component="li" variant="body2" sx={{ mb: 1 }}>
+                                    <strong>Column types:</strong> Notice different input types for each column (text, number, date, select, checkbox)
+                                </Typography>
+                                <Typography component="li" variant="body2">
+                                    <strong>Validation:</strong> Required fields are marked and validated before saving
+                                </Typography>
+                            </Box>
+                        </Paper>
+                    </Container>
+                </ThemeProvider>
+            );
+        }
+
+        // Render the demo
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<DataGridDemo />);
+    </script>
+</body>
+</html>

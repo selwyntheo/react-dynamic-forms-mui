@@ -14,6 +14,10 @@ export {
   RatingFieldComponent, 
   SliderFieldComponent 
 } from './components/fields/RatingSliderFieldComponent';
+export { DataGridFieldComponent } from './components/fields/DataGridFieldComponent';
+
+// Configuration components
+export { DataGridFieldConfig } from './components/DataGridFieldConfig';
 
 // Hooks
 export { useDynamicForm } from './hooks/useDynamicForm';

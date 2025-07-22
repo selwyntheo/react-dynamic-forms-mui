@@ -477,7 +477,8 @@
             { type: 'rating', label: 'Star Rating', icon: 'star_rate', category: 'Advanced' },
             { type: 'slider', label: 'Range Slider', icon: 'tune', category: 'Advanced' },
             { type: 'date', label: 'Date Picker', icon: 'event', category: 'Advanced' },
-            { type: 'time', label: 'Time Picker', icon: 'schedule', category: 'Advanced' }
+            { type: 'time', label: 'Time Picker', icon: 'schedule', category: 'Advanced' },
+            { type: 'datagrid', label: 'Data Grid', icon: 'table_view', category: 'Advanced' }
         ];
 
         const DragDropFormBuilder = () => {
@@ -562,7 +563,20 @@
                         ]
                     } : {}),
                     ...(fieldType === 'rating' ? { max: 5 } : {}),
-                    ...(fieldType === 'slider' ? { min: 0, max: 100, step: 1 } : {})
+                    ...(fieldType === 'slider' ? { min: 0, max: 100, step: 1 } : {}),
+                    ...(fieldType === 'datagrid' ? {
+                        columns: [
+                            { field: 'name', headerName: 'Name', type: 'string', editable: true, required: true },
+                            { field: 'value', headerName: 'Value', type: 'number', editable: true, required: false }
+                        ],
+                        initialData: [
+                            { id: 1, name: 'Sample Item', value: 100 }
+                        ],
+                        canAdd: true,
+                        canEdit: true,
+                        canDelete: true,
+                        maxRows: 50
+                    } : {})
                 };
 
                 const updatedConfig = {

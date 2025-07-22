@@ -8,6 +8,7 @@ import {
   SwitchFieldComponent 
 } from './fields/CheckboxRadioFieldComponent';
 import { RatingFieldComponent, SliderFieldComponent } from './fields/RatingSliderFieldComponent';
+import { DataGridFieldComponent } from './fields/DataGridFieldComponent';
 
 export const FieldRenderer: React.FC<FieldComponentProps> = (props) => {
   const { field } = props;
@@ -64,6 +65,9 @@ export const FieldRenderer: React.FC<FieldComponentProps> = (props) => {
     case 'autocomplete':
       // Autocomplete would be implemented here - for now fallback to select
       return <SelectFieldComponent {...props} field={field as any} />;
+    
+    case 'datagrid':
+      return <DataGridFieldComponent {...props} field={field as any} />;
     
     default:
       return <TextFieldComponent {...props} />;

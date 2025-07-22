@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   root: '.',
+  publicDir: 'dist',
   build: {
     outDir: 'demo-dist',
     rollupOptions: {
@@ -16,5 +17,9 @@ export default defineConfig({
     alias: {
       'react-dynamic-forms-mui': './src/index.ts'
     }
+  },
+  server: {
+    port: 3000,
+    open: false
   }
 });
