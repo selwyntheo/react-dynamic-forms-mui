@@ -1,6 +1,6 @@
 {
   "name": "react-dynamic-forms-mui",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A React library for creating dynamic forms with Material-UI theme",
   "type": "module",
   "main": "dist/index.js",
