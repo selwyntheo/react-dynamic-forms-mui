@@ -1,0 +1,66 @@
+{
+  "name": "react-dynamic-forms-mui",
+  "version": "1.0.0",
+  "description": "A React library for creating dynamic forms with Material-UI theme",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "echo \"No tests specified\"",
+    "lint": "eslint src/**/*.{ts,tsx}",
+    "lint:fix": "eslint src/**/*.{ts,tsx} --fix",
+    "demo": "vite serve --port 3000"
+  },
+  "peerDependencies": {
+    "@emotion/react": ">=11.0.0",
+    "@emotion/styled": ">=11.0.0",
+    "@mui/material": ">=5.0.0",
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  },
+  "devDependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^5.14.0",
+    "@mui/material": "^5.18.0",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "eslint": "^8.0.0",
+    "eslint-plugin-react": "^7.32.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "rollup": "^3.0.0",
+    "rollup-plugin-dts": "^6.0.0",
+    "tslib": "^2.8.1",
+    "typescript": "^5.0.0",
+    "vite": "^4.4.0"
+  },
+  "keywords": [
+    "react",
+    "forms",
+    "dynamic",
+    "material-ui",
+    "mui",
+    "form-builder",
+    "typescript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/react-dynamic-forms-mui.git"
+  }
+}

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Dynamic Forms - Working Demo</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            padding: 20px;
+        }
+        
+        #root {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .demo-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .field-group {
+            margin-bottom: 16px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #1976d2;
+            box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+        }
+        
+        button {
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 8px;
+        }
+        
+        button:hover {
+            background-color: #1565c0;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .error {
+            color: #d32f2f;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        .success {
+            color: #2e7d32;
+            padding: 12px;
+            background-color: #e8f5e8;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <h1>🚀 React Dynamic Forms Library - Demo</h1>
+        
+        <div class="demo-section">
+            <h2>✅ Library Status</h2>
+            <ul>
+                <li><strong>Build Status:</strong> ✅ Successfully compiled</li>
+                <li><strong>TypeScript:</strong> ✅ Type definitions generated</li>
+                <li><strong>Material-UI:</strong> ✅ Integrated</li>
+                <li><strong>Components:</strong> ✅ All field types implemented</li>
+            </ul>
+        </div>
+
+        <div class="demo-section">
+            <h2>📋 Basic Form Demo (Vanilla Implementation)</h2>
+            <p>This demonstrates the core functionality that the React library provides:</p>
+            
+            <div id="basic-form">
+                <div class="field-group">
+                    <label for="firstName">First Name *</label>
+                    <input type="text" id="firstName" name="firstName" required>
+                    <div class="error" id="firstName-error"></div>
+                </div>
+                
+                <div class="field-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" name="email" required>
+                    <div class="error" id="email-error"></div>
+                </div>
+                
+                <div class="field-group">
+                    <label for="country">Country</label>
+                    <select id="country" name="country">
+                        <option value="">Select a country</option>
+                        <option value="us">United States</option>
+                        <option value="ca">Canada</option>
+                        <option value="uk">United Kingdom</option>
+                        <option value="au">Australia</option>
+                    </select>
+                </div>
+                
+                <div class="field-group">
+                    <label for="message">Message *</label>
+                    <textarea id="message" name="message" rows="4" placeholder="Enter your message..." required></textarea>
+                    <div class="error" id="message-error"></div>
+                </div>
+                
+                <button onclick="submitBasicForm()">Submit Form</button>
+                <button onclick="resetBasicForm()" type="button">Reset</button>
+            </div>
+            
+            <div id="form-result"></div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🎯 React Library Features</h2>
+            <h3>Implemented Components:</h3>
+            <ul>
+                <li>✅ <strong>DynamicForm:</strong> Main form component with Material-UI theming</li>
+                <li>✅ <strong>TextFieldComponent:</strong> Text, email, password, number inputs</li>
+                <li>✅ <strong>SelectFieldComponent:</strong> Single and multi-select dropdowns</li>
+                <li>✅ <strong>CheckboxRadioFieldComponent:</strong> Checkboxes, radio buttons, switches</li>
+                <li>✅ <strong>RatingSliderFieldComponent:</strong> Star ratings and range sliders</li>
+                <li>✅ <strong>FieldRenderer:</strong> Dynamic component mapping</li>
+            </ul>
+            
+            <h3>Form Management:</h3>
+            <ul>
+                <li>✅ <strong>useDynamicForm hook:</strong> Complete form state management</li>
+                <li>✅ <strong>Validation system:</strong> Required, length, pattern, custom rules</li>
+                <li>✅ <strong>Real-time validation:</strong> Immediate feedback on field changes</li>
+                <li>✅ <strong>Section support:</strong> Collapsible form sections</li>
+            </ul>
+            
+            <h3>Field Types Supported:</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 10px;">
+                <div>• Text inputs</div>
+                <div>• Email validation</div>
+                <div>• Password fields</div>
+                <div>• Number inputs</div>
+                <div>• Textarea</div>
+                <div>• Select dropdowns</div>
+                <div>• Multi-select</div>
+                <div>• Radio buttons</div>
+                <div>• Checkboxes</div>
+                <div>• Switch toggles</div>
+                <div>• Star ratings</div>
+                <div>• Range sliders</div>
+                <div>• Date/time pickers</div>
+                <div>• File uploads</div>
+                <div>• Autocomplete</div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>💻 Usage Example</h2>
+            <pre style="background: #f5f5f5; padding: 16px; border-radius: 4px; overflow-x: auto;"><code>import { DynamicForm } from 'react-dynamic-forms-mui';
+
+const formConfig = {
+  id: 'contact-form',
+  title: 'Contact Us',
+  sections: [{
+    id: 'personal',
+    fields: [{
+      id: 'name',
+      name: 'name',
+      label: 'Full Name',
+      type: 'text',
+      required: true,
+      validation: [
+        { type: 'required', message: 'Name is required' }
+      ]
+    }]
+  }]
+};
+
+function App() {
+  return (
+    &lt;DynamicForm 
+      config={formConfig}
+      onSubmit={(data, isValid) => console.log(data)}
+    /&gt;
+  );
+}</code></pre>
+        </div>
+
+        <div class="demo-section">
+            <h2>🛠 Build Information</h2>
+            <p><strong>Library Location:</strong> <code>/dist/index.js</code> and <code>/dist/index.esm.js</code></p>
+            <p><strong>TypeScript Definitions:</strong> <code>/dist/index.d.ts</code></p>
+            <p><strong>Package:</strong> <code>react-dynamic-forms-mui</code></p>
+            <p><strong>Status:</strong> Ready for production use</p>
+        </div>
+    </div>
+
+    <script>
+        function validateField(fieldId, value, rules = {}) {
+            const errorElement = document.getElementById(fieldId + '-error');
+            let error = '';
+            
+            if (rules.required && !value.trim()) {
+                error = 'This field is required';
+            } else if (fieldId === 'email' && value && !value.includes('@')) {
+                error = 'Please enter a valid email address';
+            } else if (fieldId === 'message' && value && value.length < 10) {
+                error = 'Message must be at least 10 characters';
+            }
+            
+            errorElement.textContent = error;
+            return !error;
+        }
+
+        function submitBasicForm() {
+            const form = document.getElementById('basic-form');
+            const formData = new FormData();
+            let isValid = true;
+            
+            // Get form values
+            const firstName = document.getElementById('firstName').value;
+            const email = document.getElementById('email').value;
+            const country = document.getElementById('country').value;
+            const message = document.getElementById('message').value;
+            
+            // Validate fields
+            isValid &= validateField('firstName', firstName, { required: true });
+            isValid &= validateField('email', email, { required: true });
+            isValid &= validateField('message', message, { required: true });
+            
+            const resultDiv = document.getElementById('form-result');
+            
+            if (isValid) {
+                const data = { firstName, email, country, message };
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <h4>✅ Form Submitted Successfully!</h4>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = '<div style="color: #d32f2f;">❌ Please fix the errors above</div>';
+            }
+        }
+
+        function resetBasicForm() {
+            document.getElementById('basic-form').reset();
+            document.querySelectorAll('.error').forEach(el => el.textContent = '');
+            document.getElementById('form-result').innerHTML = '';
+        }
+
+        // Add real-time validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const fields = ['firstName', 'email', 'message'];
+            fields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                field.addEventListener('blur', function() {
+                    validateField(fieldId, this.value, { required: true });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

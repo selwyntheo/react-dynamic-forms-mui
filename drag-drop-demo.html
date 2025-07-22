@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Dynamic Forms - Drag & Drop Builder Demo</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Material-UI -->
+    <script crossorigin src="https://unpkg.com/@mui/material@5.14.0/umd/material-ui.development.js"></script>
+    <script crossorigin src="https://unpkg.com/@emotion/react@11/umd/emotion-react.umd.min.js"></script>
+    <script crossorigin src="https://unpkg.com/@emotion/styled@11/umd/emotion-styled.umd.min.js"></script>
+    
+    <!-- Material Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" />
+    
+    <style>
+        body { 
+            margin: 0; 
+            font-family: 'Roboto', sans-serif; 
+            background-color: #f5f5f5;
+            min-height: 100vh;
+        }
+        .field-palette-item {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: grab;
+            border-radius: 8px;
+        }
+        .field-palette-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.08);
+        }
+        .field-palette-item:active {
+            cursor: grabbing;
+            transform: translateY(0);
+        }
+        .field-palette-item.dragging {
+            opacity: 0.7;
+            transform: rotate(5deg);
+        }
+        .drop-zone {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+        }
+        .drop-zone.drag-over {
+            background-color: rgba(25, 118, 210, 0.04) !important;
+            border-color: #1976d2 !important;
+            box-shadow: inset 0 0 0 2px #1976d2;
+        }
+        .form-field-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+        }
+        .form-field-card:hover {
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+            transform: translateY(-1px);
+        }
+        .field-actions {
+            opacity: 0;
+            transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .form-field-card:hover .field-actions {
+            opacity: 1;
+        }
+        .mui-gradient-bg {
+            background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+        }
+        .palette-category {
+            border-left: 4px solid #1976d2;
+            padding-left: 12px;
+            margin-bottom: 16px;
+        }
+        .empty-state {
+            background: linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(66, 165, 245, 0.05) 100%);
+            border: 2px dashed #90caf9;
+            border-radius: 16px;
+        }
+        .preview-mode {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { 
+            useState, 
+            useCallback, 
+            useEffect,
+            useRef
+        } = React;
+        
+        const {
+            Box,
+            Paper,
+            Typography,
+            Grid,
+            Card,
+            CardContent,
+            Button,
+            Divider,
+            Chip,
+            IconButton,
+            Dialog,
+            DialogTitle,
+            DialogContent,
+            DialogActions,
+            TextField,
+            FormControl,
+            InputLabel,
+            Select,
+            MenuItem,
+            Switch,
+            FormControlLabel,
+            Container,
+            ThemeProvider,
+            createTheme,
+            CssBaseline,
+            AppBar,
+            Toolbar,
+            Fab,
+            Tooltip,
+            Alert,
+            Snackbar
+        } = MaterialUI;
+
+        // Create Material-UI theme with proper MUI design tokens
+        const theme = createTheme({
+            palette: {
+                mode: 'light',
+                primary: {
+                    main: '#1976d2',
+                    light: '#42a5f5',
+                    dark: '#1565c0',
+                    contrastText: '#ffffff',
+                },
+                secondary: {
+                    main: '#9c27b0',
+                    light: '#ba68c8',
+                    dark: '#7b1fa2',
+                    contrastText: '#ffffff',
+                },
+                background: {
+                    default: '#f5f5f5',
+                    paper: '#ffffff',
+                },
+                grey: {
+                    50: '#fafafa',
+                    100: '#f5f5f5',
+                    200: '#eeeeee',
+                    300: '#e0e0e0',
+                    400: '#bdbdbd',
+                    500: '#9e9e9e',
+                    600: '#757575',
+                    700: '#616161',
+                    800: '#424242',
+                    900: '#212121',
+                },
+                action: {
+                    hover: 'rgba(0, 0, 0, 0.04)',
+                    selected: 'rgba(0, 0, 0, 0.08)',
+                    disabled: 'rgba(0, 0, 0, 0.26)',
+                    disabledBackground: 'rgba(0, 0, 0, 0.12)',
+                },
+            },
+            typography: {
+                fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+                h4: {
+                    fontWeight: 600,
+                    fontSize: '2.125rem',
+                    lineHeight: 1.235,
+                },
+                h5: {
+                    fontWeight: 500,
+                    fontSize: '1.5rem',
+                    lineHeight: 1.334,
+                },
+                h6: {
+                    fontWeight: 500,
+                    fontSize: '1.25rem',
+                    lineHeight: 1.6,
+                },
+                subtitle1: {
+                    fontWeight: 500,
+                    fontSize: '1rem',
+                    lineHeight: 1.75,
+                },
+                subtitle2: {
+                    fontWeight: 500,
+                    fontSize: '0.875rem',
+                    lineHeight: 1.57,
+                },
+                body1: {
+                    fontSize: '1rem',
+                    lineHeight: 1.5,
+                },
+                body2: {
+                    fontSize: '0.875rem',
+                    lineHeight: 1.43,
+                },
+            },
+            shape: {
+                borderRadius: 8,
+            },
+            spacing: 8,
+            shadows: [
+                'none',
+                '0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12)',
+                '0px 3px 1px -2px rgba(0,0,0,0.2),0px 2px 2px 0px rgba(0,0,0,0.14),0px 1px 5px 0px rgba(0,0,0,0.12)',
+                '0px 3px 3px -2px rgba(0,0,0,0.2),0px 3px 4px 0px rgba(0,0,0,0.14),0px 1px 8px 0px rgba(0,0,0,0.12)',
+                '0px 2px 4px -1px rgba(0,0,0,0.2),0px 4px 5px 0px rgba(0,0,0,0.14),0px 1px 10px 0px rgba(0,0,0,0.12)',
+                '0px 3px 5px -1px rgba(0,0,0,0.2),0px 5px 8px 0px rgba(0,0,0,0.14),0px 1px 14px 0px rgba(0,0,0,0.12)',
+                '0px 3px 5px -1px rgba(0,0,0,0.2),0px 6px 10px 0px rgba(0,0,0,0.14),0px 1px 18px 0px rgba(0,0,0,0.12)',
+                '0px 4px 5px -2px rgba(0,0,0,0.2),0px 7px 10px 1px rgba(0,0,0,0.14),0px 2px 16px 1px rgba(0,0,0,0.12)',
+                '0px 5px 5px -3px rgba(0,0,0,0.2),0px 8px 10px 1px rgba(0,0,0,0.14),0px 3px 14px 2px rgba(0,0,0,0.12)',
+                '0px 5px 6px -3px rgba(0,0,0,0.2),0px 9px 12px 1px rgba(0,0,0,0.14),0px 3px 16px 2px rgba(0,0,0,0.12)',
+                '0px 6px 6px -3px rgba(0,0,0,0.2),0px 10px 14px 1px rgba(0,0,0,0.14),0px 4px 18px 3px rgba(0,0,0,0.12)',
+                '0px 6px 7px -4px rgba(0,0,0,0.2),0px 11px 15px 1px rgba(0,0,0,0.14),0px 4px 20px 3px rgba(0,0,0,0.12)',
+                '0px 7px 8px -4px rgba(0,0,0,0.2),0px 12px 17px 2px rgba(0,0,0,0.14),0px 5px 22px 4px rgba(0,0,0,0.12)',
+                '0px 7px 8px -4px rgba(0,0,0,0.2),0px 13px 19px 2px rgba(0,0,0,0.14),0px 5px 24px 4px rgba(0,0,0,0.12)',
+                '0px 7px 9px -4px rgba(0,0,0,0.2),0px 14px 21px 2px rgba(0,0,0,0.14),0px 5px 26px 4px rgba(0,0,0,0.12)',
+                '0px 8px 9px -5px rgba(0,0,0,0.2),0px 15px 22px 2px rgba(0,0,0,0.14),0px 6px 28px 5px rgba(0,0,0,0.12)',
+                '0px 8px 10px -5px rgba(0,0,0,0.2),0px 16px 24px 2px rgba(0,0,0,0.14),0px 6px 30px 5px rgba(0,0,0,0.12)',
+                '0px 8px 11px -5px rgba(0,0,0,0.2),0px 17px 26px 2px rgba(0,0,0,0.14),0px 6px 32px 5px rgba(0,0,0,0.12)',
+                '0px 9px 11px -5px rgba(0,0,0,0.2),0px 18px 28px 2px rgba(0,0,0,0.14),0px 7px 34px 6px rgba(0,0,0,0.12)',
+                '0px 9px 12px -6px rgba(0,0,0,0.2),0px 19px 29px 2px rgba(0,0,0,0.14),0px 7px 36px 6px rgba(0,0,0,0.12)',
+                '0px 10px 13px -6px rgba(0,0,0,0.2),0px 20px 31px 3px rgba(0,0,0,0.14),0px 8px 38px 7px rgba(0,0,0,0.12)',
+                '0px 10px 13px -6px rgba(0,0,0,0.2),0px 21px 33px 3px rgba(0,0,0,0.14),0px 8px 40px 7px rgba(0,0,0,0.12)',
+                '0px 10px 14px -6px rgba(0,0,0,0.2),0px 22px 35px 3px rgba(0,0,0,0.14),0px 8px 42px 7px rgba(0,0,0,0.12)',
+                '0px 11px 14px -7px rgba(0,0,0,0.2),0px 23px 36px 3px rgba(0,0,0,0.14),0px 9px 44px 8px rgba(0,0,0,0.12)',
+                '0px 11px 15px -7px rgba(0,0,0,0.2),0px 24px 38px 3px rgba(0,0,0,0.14),0px 9px 46px 8px rgba(0,0,0,0.12)',
+            ],
+            components: {
+                MuiPaper: {
+                    styleOverrides: {
+                        root: {
+                            backgroundImage: 'none',
+                        },
+                        elevation1: {
+                            boxShadow: '0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12)',
+                        },
+                        elevation2: {
+                            boxShadow: '0px 3px 1px -2px rgba(0,0,0,0.2),0px 2px 2px 0px rgba(0,0,0,0.14),0px 1px 5px 0px rgba(0,0,0,0.12)',
+                        },
+                        elevation4: {
+                            boxShadow: '0px 2px 4px -1px rgba(0,0,0,0.2),0px 4px 5px 0px rgba(0,0,0,0.14),0px 1px 10px 0px rgba(0,0,0,0.12)',
+                        },
+                    },
+                },
+                MuiCard: {
+                    styleOverrides: {
+                        root: {
+                            borderRadius: 12,
+                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        },
+                    },
+                },
+                MuiButton: {
+                    styleOverrides: {
+                        root: {
+                            borderRadius: 8,
+                            textTransform: 'none',
+                            fontWeight: 500,
+                        },
+                    },
+                },
+                MuiFab: {
+                    styleOverrides: {
+                        root: {
+                            boxShadow: '0px 3px 5px -1px rgba(0,0,0,0.2),0px 6px 10px 0px rgba(0,0,0,0.14),0px 1px 18px 0px rgba(0,0,0,0.12)',
+                        },
+                    },
+                },
+            },
+        });
+
+        // Mock implementation of the dynamic form library components
+        const DynamicForm = ({ config, onSubmit, onChange }) => {
+            const [formData, setFormData] = useState({});
+            const [errors, setErrors] = useState({});
+
+            const handleFieldChange = (fieldName, value) => {
+                const newData = { ...formData, [fieldName]: value };
+                setFormData(newData);
+                if (onChange) onChange(newData, fieldName);
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                // Simple validation
+                const newErrors = {};
+                let isValid = true;
+
+                config.sections.forEach(section => {
+                    section.fields.forEach(field => {
+                        if (field.required && (!formData[field.name] || formData[field.name] === '')) {
+                            newErrors[field.name] = `${field.label} is required`;
+                            isValid = false;
+                        }
+                    });
+                });
+
+                setErrors(newErrors);
+                if (onSubmit) onSubmit(formData, isValid);
+            };
+
+            const renderField = (field) => {
+                const value = formData[field.name] || field.defaultValue || '';
+                const hasError = !!errors[field.name];
+
+                switch (field.type) {
+                    case 'text':
+                    case 'email':
+                    case 'password':
+                    case 'number':
+                        return (
+                            <TextField
+                                fullWidth
+                                label={field.label}
+                                type={field.type}
+                                value={value}
+                                onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                                error={hasError}
+                                helperText={errors[field.name] || field.helperText}
+                                required={field.required}
+                                placeholder={field.placeholder}
+                                variant="outlined"
+                                margin="normal"
+                            />
+                        );
+                    
+                    case 'textarea':
+                        return (
+                            <TextField
+                                fullWidth
+                                multiline
+                                rows={4}
+                                label={field.label}
+                                value={value}
+                                onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                                error={hasError}
+                                helperText={errors[field.name] || field.helperText}
+                                required={field.required}
+                                placeholder={field.placeholder}
+                                variant="outlined"
+                                margin="normal"
+                            />
+                        );
+                    
+                    case 'select':
+                        return (
+                            <FormControl fullWidth margin="normal" error={hasError}>
+                                <InputLabel>{field.label}</InputLabel>
+                                <Select
+                                    value={value}
+                                    label={field.label}
+                                    onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                                >
+                                    {field.options?.map((option) => (
+                                        <MenuItem key={option.value} value={option.value}>
+                                            {option.label}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                                {(errors[field.name] || field.helperText) && (
+                                    <Typography variant="caption" color="error" sx={{ mt: 1, ml: 2 }}>
+                                        {errors[field.name] || field.helperText}
+                                    </Typography>
+                                )}
+                            </FormControl>
+                        );
+                    
+                    case 'switch':
+                        return (
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={!!value}
+                                        onChange={(e) => handleFieldChange(field.name, e.target.checked)}
+                                    />
+                                }
+                                label={field.label}
+                                sx={{ mt: 2, mb: 1 }}
+                            />
+                        );
+                    
+                    default:
+                        return (
+                            <TextField
+                                fullWidth
+                                label={field.label}
+                                value={value}
+                                onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                                error={hasError}
+                                helperText={errors[field.name] || field.helperText}
+                                required={field.required}
+                                placeholder={field.placeholder}
+                                variant="outlined"
+                                margin="normal"
+                            />
+                        );
+                }
+            };
+
+            return (
+                <Box component="form" onSubmit={handleSubmit}>
+                    <Typography variant="h4" gutterBottom>
+                        {config.title}
+                    </Typography>
+                    {config.description && (
+                        <Typography variant="body1" color="textSecondary" paragraph>
+                            {config.description}
+                        </Typography>
+                    )}
+                    
+                    {config.sections.map((section) => (
+                        <Box key={section.id} sx={{ mb: 3 }}>
+                            <Typography variant="h5" gutterBottom>
+                                {section.title}
+                            </Typography>
+                            {section.description && (
+                                <Typography variant="body2" color="textSecondary" paragraph>
+                                    {section.description}
+                                </Typography>
+                            )}
+                            
+                            {section.fields.map((field) => (
+                                <Box key={field.id} sx={{ mb: 2 }}>
+                                    {renderField(field)}
+                                </Box>
+                            ))}
+                        </Box>
+                    ))}
+                    
+                    <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+                        <Button 
+                            type="submit" 
+                            variant="contained" 
+                            size="large"
+                            sx={{ px: 4 }}
+                        >
+                            {config.submitText || 'Submit'}
+                        </Button>
+                        {config.showReset && (
+                            <Button 
+                                type="button" 
+                                variant="outlined" 
+                                size="large"
+                                onClick={() => setFormData({})}
+                            >
+                                {config.resetText || 'Reset'}
+                            </Button>
+                        )}
+                    </Box>
+                </Box>
+            );
+        };
+
+        // Available field types for the field palette with MUI icons
+        const FIELD_TYPES = [
+            { type: 'text', label: 'Text Input', icon: 'text_fields', category: 'Basic' },
+            { type: 'email', label: 'Email', icon: 'email', category: 'Basic' },
+            { type: 'password', label: 'Password', icon: 'lock', category: 'Basic' },
+            { type: 'number', label: 'Number', icon: 'numbers', category: 'Basic' },
+            { type: 'textarea', label: 'Textarea', icon: 'subject', category: 'Basic' },
+            { type: 'select', label: 'Dropdown', icon: 'arrow_drop_down_circle', category: 'Selection' },
+            { type: 'multiselect', label: 'Multi-Select', icon: 'checklist', category: 'Selection' },
+            { type: 'radio', label: 'Radio Group', icon: 'radio_button_checked', category: 'Selection' },
+            { type: 'checkbox', label: 'Checkbox', icon: 'check_box', category: 'Selection' },
+            { type: 'switch', label: 'Toggle Switch', icon: 'toggle_on', category: 'Selection' },
+            { type: 'rating', label: 'Star Rating', icon: 'star_rate', category: 'Advanced' },
+            { type: 'slider', label: 'Range Slider', icon: 'tune', category: 'Advanced' },
+            { type: 'date', label: 'Date Picker', icon: 'event', category: 'Advanced' },
+            { type: 'time', label: 'Time Picker', icon: 'schedule', category: 'Advanced' }
+        ];
+
+        const DragDropFormBuilder = () => {
+            const [formConfig, setFormConfig] = useState({
+                id: 'dynamic-form',
+                title: 'My Dynamic Form',
+                description: 'A form built with drag and drop',
+                sections: [{
+                    id: 'main-section',
+                    title: 'Form Fields',
+                    fields: []
+                }],
+                submitText: 'Submit Form',
+                showReset: true
+            });
+
+            const [editingField, setEditingField] = useState(null);
+            const [editDialogOpen, setEditDialogOpen] = useState(false);
+            const [previewMode, setPreviewMode] = useState(false);
+            const [draggedField, setDraggedField] = useState(null);
+            const [dragOverZone, setDragOverZone] = useState(false);
+            const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+            const dropZoneRef = useRef(null);
+
+            // Handle drag start from field palette
+            const handleDragStart = (e, fieldType) => {
+                e.dataTransfer.setData('fieldType', fieldType);
+                setDraggedField(fieldType);
+                e.target.classList.add('dragging');
+            };
+
+            const handleDragEnd = (e) => {
+                e.target.classList.remove('dragging');
+                setDraggedField(null);
+                setDragOverZone(false);
+            };
+
+            // Handle drop in form builder area
+            const handleDrop = (e) => {
+                e.preventDefault();
+                const fieldType = e.dataTransfer.getData('fieldType');
+                if (fieldType) {
+                    addField(fieldType);
+                    setSnackbar({
+                        open: true,
+                        message: `${FIELD_TYPES.find(f => f.type === fieldType)?.label} field added!`,
+                        severity: 'success'
+                    });
+                }
+                setDraggedField(null);
+                setDragOverZone(false);
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+                setDragOverZone(true);
+            };
+
+            const handleDragLeave = (e) => {
+                if (!dropZoneRef.current?.contains(e.relatedTarget)) {
+                    setDragOverZone(false);
+                }
+            };
+
+            // Add a new field to the form
+            const addField = (fieldType) => {
+                const fieldId = `field_${Date.now()}`;
+                const fieldTypeInfo = FIELD_TYPES.find(f => f.type === fieldType);
+                
+                const newField = {
+                    id: fieldId,
+                    name: fieldId,
+                    label: fieldTypeInfo?.label || 'New Field',
+                    type: fieldType,
+                    required: false,
+                    placeholder: `Enter ${fieldTypeInfo?.label.toLowerCase()}...`,
+                    ...(fieldType === 'select' || fieldType === 'multiselect' || fieldType === 'radio' || fieldType === 'checkbox' ? {
+                        options: [
+                            { value: 'option1', label: 'Option 1' },
+                            { value: 'option2', label: 'Option 2' },
+                            { value: 'option3', label: 'Option 3' }
+                        ]
+                    } : {}),
+                    ...(fieldType === 'rating' ? { max: 5 } : {}),
+                    ...(fieldType === 'slider' ? { min: 0, max: 100, step: 1 } : {})
+                };
+
+                const updatedConfig = {
+                    ...formConfig,
+                    sections: formConfig.sections.map(section => 
+                        section.id === 'main-section' 
+                            ? { ...section, fields: [...section.fields, newField] }
+                            : section
+                    )
+                };
+
+                setFormConfig(updatedConfig);
+            };
+
+            // Remove a field from the form
+            const removeField = (fieldId) => {
+                const updatedConfig = {
+                    ...formConfig,
+                    sections: formConfig.sections.map(section => ({
+                        ...section,
+                        fields: section.fields.filter(field => field.id !== fieldId)
+                    }))
+                };
+
+                setFormConfig(updatedConfig);
+                setSnackbar({
+                    open: true,
+                    message: 'Field removed successfully!',
+                    severity: 'info'
+                });
+            };
+
+            // Open field editor
+            const editField = (field) => {
+                setEditingField({ ...field });
+                setEditDialogOpen(true);
+            };
+
+            // Save field changes
+            const saveFieldChanges = () => {
+                if (!editingField) return;
+
+                const updatedConfig = {
+                    ...formConfig,
+                    sections: formConfig.sections.map(section => ({
+                        ...section,
+                        fields: section.fields.map(field => 
+                            field.id === editingField.id ? editingField : field
+                        )
+                    }))
+                };
+
+                setFormConfig(updatedConfig);
+                setEditDialogOpen(false);
+                setEditingField(null);
+                setSnackbar({
+                    open: true,
+                    message: 'Field updated successfully!',
+                    severity: 'success'
+                });
+            };
+
+            // Group field types by category
+            const fieldsByCategory = FIELD_TYPES.reduce((acc, field) => {
+                if (!acc[field.category]) acc[field.category] = [];
+                acc[field.category].push(field);
+                return acc;
+            }, {});
+
+            return (
+                <ThemeProvider theme={theme}>
+                    <CssBaseline />
+                    
+                    {/* App Bar */}
+                    <AppBar 
+                        position="static" 
+                        elevation={0} 
+                        className="mui-gradient-bg"
+                        sx={{ 
+                            mb: 4,
+                            borderRadius: '0 0 16px 16px',
+                            background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+                        }}
+                    >
+                        <Toolbar sx={{ py: 1 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, gap: 2 }}>
+                                <Box 
+                                    sx={{ 
+                                        width: 48, 
+                                        height: 48, 
+                                        backgroundColor: 'rgba(255,255,255,0.15)',
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: 'white'
+                                    }}
+                                >
+                                    <i className="material-icons" style={{ fontSize: '28px' }}>dynamic_form</i>
+                                </Box>
+                                <Box>
+                                    <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
+                                        React Dynamic Forms
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                                        Drag & Drop Form Builder
+                                    </Typography>
+                                </Box>
+                            </Box>
+                            <Button 
+                                color="inherit" 
+                                variant="outlined"
+                                onClick={() => setPreviewMode(!previewMode)}
+                                sx={{ 
+                                    borderColor: 'rgba(255,255,255,0.3)',
+                                    color: 'white',
+                                    '&:hover': {
+                                        borderColor: 'rgba(255,255,255,0.5)',
+                                        backgroundColor: 'rgba(255,255,255,0.1)',
+                                    }
+                                }}
+                                startIcon={<i className="material-icons">{previewMode ? 'build' : 'preview'}</i>}
+                            >
+                                {previewMode ? 'Builder' : 'Preview'}
+                            </Button>
+                        </Toolbar>
+                    </AppBar>
+
+                    <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
+                        {!previewMode ? (
+                            <Grid container spacing={3}>
+                                {/* Field Palette */}
+                                <Grid item xs={12} lg={3}>
+                                    <Paper 
+                                        elevation={2}
+                                        sx={{ 
+                                            p: 3, 
+                                            position: 'sticky', 
+                                            top: 24,
+                                            borderRadius: 3,
+                                            background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                                        }}
+                                    >
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                                            <Box 
+                                                sx={{ 
+                                                    width: 40, 
+                                                    height: 40, 
+                                                    backgroundColor: theme.palette.primary.main,
+                                                    borderRadius: 2,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    color: 'white'
+                                                }}
+                                            >
+                                                <i className="material-icons">palette</i>
+                                            </Box>
+                                            <Box>
+                                                <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                                                    Field Palette
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Drag to add fields
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                        
+                                        {Object.entries(fieldsByCategory).map(([category, fields]) => (
+                                            <Box key={category} className="palette-category" sx={{ mb: 3 }}>
+                                                <Typography 
+                                                    variant="subtitle2" 
+                                                    sx={{ 
+                                                        mb: 2, 
+                                                        color: 'primary.main', 
+                                                        fontWeight: 600,
+                                                        textTransform: 'uppercase',
+                                                        letterSpacing: 1,
+                                                        fontSize: '0.75rem'
+                                                    }}
+                                                >
+                                                    {category}
+                                                </Typography>
+                                                <Grid container spacing={1.5}>
+                                                    {fields.map((fieldType) => (
+                                                        <Grid item xs={12} sm={6} lg={12} key={fieldType.type}>
+                                                            <Card
+                                                                draggable
+                                                                onDragStart={(e) => handleDragStart(e, fieldType.type)}
+                                                                onDragEnd={handleDragEnd}
+                                                                className="field-palette-item"
+                                                                elevation={1}
+                                                                sx={{
+                                                                    cursor: 'grab',
+                                                                    border: '1px solid',
+                                                                    borderColor: 'divider',
+                                                                    '&:hover': {
+                                                                        borderColor: 'primary.main',
+                                                                        boxShadow: theme.shadows[4],
+                                                                    },
+                                                                    '&:active': {
+                                                                        cursor: 'grabbing'
+                                                                    },
+                                                                    '&.dragging': {
+                                                                        opacity: 0.7,
+                                                                        transform: 'rotate(5deg)',
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                                                        <Box 
+                                                                            sx={{ 
+                                                                                width: 32, 
+                                                                                height: 32,
+                                                                                backgroundColor: 'primary.main',
+                                                                                borderRadius: 1.5,
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                color: 'white'
+                                                                            }}
+                                                                        >
+                                                                            <i className="material-icons" style={{ fontSize: '18px' }}>
+                                                                                {fieldType.icon}
+                                                                            </i>
+                                                                        </Box>
+                                                                        <Typography 
+                                                                            variant="body2" 
+                                                                            sx={{ 
+                                                                                fontSize: '0.875rem', 
+                                                                                fontWeight: 500,
+                                                                                color: 'text.primary'
+                                                                            }}
+                                                                        >
+                                                                            {fieldType.label}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                </CardContent>
+                                                            </Card>
+                                                        </Grid>
+                                                    ))}
+                                                </Grid>
+                                            </Box>
+                                        ))}
+                                    </Paper>
+                                </Grid>
+
+                                {/* Form Builder */}
+                                <Grid item xs={12} lg={9}>
+                                    <Paper 
+                                        ref={dropZoneRef}
+                                        className={`drop-zone ${dragOverZone ? 'drag-over' : ''}`}
+                                        elevation={2}
+                                        sx={{ 
+                                            p: 4, 
+                                            minHeight: 600,
+                                            border: '2px dashed',
+                                            borderColor: dragOverZone ? 'primary.main' : 'divider',
+                                            backgroundColor: dragOverZone ? 'primary.50' : 'background.paper',
+                                            borderRadius: 3,
+                                        }}
+                                        onDrop={handleDrop}
+                                        onDragOver={handleDragOver}
+                                        onDragLeave={handleDragLeave}
+                                    >
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                <Box 
+                                                    sx={{ 
+                                                        width: 48, 
+                                                        height: 48, 
+                                                        backgroundColor: 'primary.main',
+                                                        borderRadius: 2,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        color: 'white'
+                                                    }}
+                                                >
+                                                    <i className="material-icons" style={{ fontSize: '28px' }}>construction</i>
+                                                </Box>
+                                                <Box>
+                                                    <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                                                        Form Builder
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {formConfig.sections[0].fields.length} fields added
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                                <Tooltip title="Preview Form">
+                                                    <IconButton 
+                                                        onClick={() => setPreviewMode(true)} 
+                                                        color="primary"
+                                                        sx={{ 
+                                                            backgroundColor: 'primary.50',
+                                                            '&:hover': { backgroundColor: 'primary.100' }
+                                                        }}
+                                                    >
+                                                        <i className="material-icons">preview</i>
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="Export JSON Configuration">
+                                                    <IconButton 
+                                                        color="primary"
+                                                        sx={{ 
+                                                            backgroundColor: 'primary.50',
+                                                            '&:hover': { backgroundColor: 'primary.100' }
+                                                        }}
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(JSON.stringify(formConfig, null, 2));
+                                                            setSnackbar({
+                                                                open: true,
+                                                                message: 'Form configuration copied to clipboard!',
+                                                                severity: 'success'
+                                                            });
+                                                        }}
+                                                    >
+                                                        <i className="material-icons">content_copy</i>
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </Box>
+                                        </Box>
+
+                                        {formConfig.sections[0].fields.length === 0 ? (
+                                            <Box
+                                                className="empty-state"
+                                                sx={{
+                                                    p: 8,
+                                                    textAlign: 'center',
+                                                    border: '2px dashed',
+                                                    borderColor: dragOverZone ? 'primary.main' : 'primary.light',
+                                                    borderRadius: 4,
+                                                    backgroundColor: dragOverZone ? 'primary.50' : 'rgba(25, 118, 210, 0.02)',
+                                                }}
+                                            >
+                                                <Box 
+                                                    sx={{ 
+                                                        width: 80, 
+                                                        height: 80, 
+                                                        backgroundColor: 'primary.100',
+                                                        borderRadius: '50%',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        margin: '0 auto 24px',
+                                                        color: 'primary.main'
+                                                    }}
+                                                >
+                                                    <i className="material-icons" style={{ fontSize: '42px' }}>add_circle_outline</i>
+                                                </Box>
+                                                <Typography variant="h5" color="text.primary" gutterBottom sx={{ fontWeight: 600 }}>
+                                                    Drop fields here to build your form
+                                                </Typography>
+                                                <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                                                    Drag any field type from the palette on the left to get started
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    You can customize each field after adding it
+                                                </Typography>
+                                            </Box>
+                                        ) : (
+                                            <Box>
+                                                {formConfig.sections[0].fields.map((field, index) => (
+                                                    <Card 
+                                                        key={field.id} 
+                                                        className="form-field-card"
+                                                        elevation={1}
+                                                        sx={{ 
+                                                            mb: 2, 
+                                                            position: 'relative',
+                                                            border: '1px solid',
+                                                            borderColor: 'divider',
+                                                            borderRadius: 3,
+                                                            '&:hover': {
+                                                                borderColor: 'primary.main',
+                                                                boxShadow: theme.shadows[4],
+                                                            }
+                                                        }}
+                                                    >
+                                                        <CardContent sx={{ p: 3 }}>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+                                                                    <Box 
+                                                                        sx={{ 
+                                                                            width: 24, 
+                                                                            height: 24,
+                                                                            color: 'text.secondary',
+                                                                            cursor: 'grab',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'center',
+                                                                            '&:hover': { color: 'primary.main' }
+                                                                        }}
+                                                                    >
+                                                                        <i className="material-icons">drag_indicator</i>
+                                                                    </Box>
+                                                                    <Box sx={{ flex: 1 }}>
+                                                                        <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                                                                            {field.label}
+                                                                        </Typography>
+                                                                        <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                                                                            <Chip 
+                                                                                label={field.type} 
+                                                                                size="small" 
+                                                                                color="primary" 
+                                                                                variant="outlined"
+                                                                                sx={{ 
+                                                                                    borderRadius: 1.5,
+                                                                                    fontSize: '0.75rem',
+                                                                                    fontWeight: 500 
+                                                                                }}
+                                                                            />
+                                                                            {field.required && (
+                                                                                <Chip 
+                                                                                    label="Required" 
+                                                                                    size="small" 
+                                                                                    color="error" 
+                                                                                    variant="outlined"
+                                                                                    sx={{ 
+                                                                                        borderRadius: 1.5,
+                                                                                        fontSize: '0.75rem',
+                                                                                        fontWeight: 500 
+                                                                                    }}
+                                                                                />
+                                                                            )}
+                                                                        </Box>
+                                                                        <Typography variant="body2" color="text.secondary">
+                                                                            <strong>Name:</strong> {field.name}
+                                                                            {field.placeholder && (
+                                                                                <span> • <strong>Placeholder:</strong> {field.placeholder}</span>
+                                                                            )}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                </Box>
+                                                                
+                                                                <Box 
+                                                                    className="field-actions"
+                                                                    sx={{ 
+                                                                        display: 'flex',
+                                                                        gap: 1
+                                                                    }}
+                                                                >
+                                                                    <Tooltip title="Edit Field">
+                                                                        <IconButton 
+                                                                            size="small" 
+                                                                            onClick={() => editField(field)}
+                                                                            color="primary"
+                                                                            sx={{ 
+                                                                                backgroundColor: 'primary.50',
+                                                                                '&:hover': { backgroundColor: 'primary.100' }
+                                                                            }}
+                                                                        >
+                                                                            <i className="material-icons">edit</i>
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                    <Tooltip title="Delete Field">
+                                                                        <IconButton 
+                                                                            size="small" 
+                                                                            onClick={() => removeField(field.id)}
+                                                                            color="error"
+                                                                            sx={{ 
+                                                                                backgroundColor: 'error.50',
+                                                                                '&:hover': { backgroundColor: 'error.100' }
+                                                                            }}
+                                                                        >
+                                                                            <i className="material-icons">delete</i>
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                </Box>
+                                                            </Box>
+                                                        </CardContent>
+                                                    </Card>
+                                                ))}
+                                            </Box>
+                                        )}
+                                    </Paper>
+                                </Grid>
+                            </Grid>
+                        ) : (
+                            /* Preview Mode */
+                            <Paper 
+                                className="preview-mode" 
+                                elevation={4}
+                                sx={{ 
+                                    p: 5, 
+                                    maxWidth: 900, 
+                                    mx: 'auto',
+                                    borderRadius: 4,
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Box 
+                                            sx={{ 
+                                                width: 56, 
+                                                height: 56, 
+                                                backgroundColor: 'primary.main',
+                                                borderRadius: 2,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                color: 'white'
+                                            }}
+                                        >
+                                            <i className="material-icons" style={{ fontSize: '32px' }}>visibility</i>
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="h4" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                                                Form Preview
+                                            </Typography>
+                                            <Typography variant="body1" color="text.secondary">
+                                                Test your form interactively
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                    <Button 
+                                        variant="contained" 
+                                        onClick={() => setPreviewMode(false)}
+                                        startIcon={<i className="material-icons">build</i>}
+                                        sx={{ 
+                                            px: 3,
+                                            py: 1.5,
+                                            borderRadius: 2,
+                                            boxShadow: theme.shadows[3]
+                                        }}
+                                    >
+                                        Back to Builder
+                                    </Button>
+                                </Box>
+                                <Divider sx={{ mb: 4 }} />
+                                
+                                {formConfig.sections[0].fields.length > 0 ? (
+                                    <DynamicForm
+                                        config={formConfig}
+                                        onSubmit={(data, isValid) => {
+                                            console.log('Form submitted:', data, 'Valid:', isValid);
+                                            setSnackbar({
+                                                open: true,
+                                                message: `Form submitted! ${isValid ? 'Valid data ✅' : 'Has errors ⚠️'}. Check console for details.`,
+                                                severity: isValid ? 'success' : 'warning'
+                                            });
+                                        }}
+                                        onChange={(data, fieldName) => {
+                                            console.log('Field changed:', fieldName, data[fieldName]);
+                                        }}
+                                    />
+                                ) : (
+                                    <Alert 
+                                        severity="info" 
+                                        sx={{ 
+                                            textAlign: 'center',
+                                            py: 4,
+                                            borderRadius: 3,
+                                            backgroundColor: 'info.50',
+                                            border: '1px solid',
+                                            borderColor: 'info.200'
+                                        }}
+                                    >
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                                            <Box 
+                                                sx={{ 
+                                                    width: 64, 
+                                                    height: 64, 
+                                                    backgroundColor: 'info.100',
+                                                    borderRadius: '50%',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    color: 'info.main'
+                                                }}
+                                            >
+                                                <i className="material-icons" style={{ fontSize: '32px' }}>description</i>
+                                            </Box>
+                                            <Box>
+                                                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                                                    No fields added yet
+                                                </Typography>
+                                                <Typography>
+                                                    Switch back to builder mode to add fields to your form.
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                    </Alert>
+                                )}
+                            </Paper>
+                        )}
+
+                        {/* Field Edit Dialog */}
+                        <Dialog 
+                            open={editDialogOpen} 
+                            onClose={() => setEditDialogOpen(false)} 
+                            maxWidth="md" 
+                            fullWidth
+                            PaperProps={{
+                                sx: { borderRadius: 3, p: 1 }
+                            }}
+                        >
+                            <DialogTitle sx={{ pb: 2 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <Box 
+                                        sx={{ 
+                                            width: 40, 
+                                            height: 40, 
+                                            backgroundColor: 'primary.main',
+                                            borderRadius: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: 'white'
+                                        }}
+                                    >
+                                        <i className="material-icons">edit</i>
+                                    </Box>
+                                    <Box>
+                                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                            Edit Field
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            {editingField?.label}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </DialogTitle>
+                            <DialogContent sx={{ pt: 2 }}>
+                                {editingField && (
+                                    <Box sx={{ pt: 1 }}>
+                                        <Grid container spacing={3}>
+                                            <Grid item xs={12} sm={6}>
+                                                <TextField
+                                                    fullWidth
+                                                    label="Field Label"
+                                                    value={editingField.label}
+                                                    onChange={(e) => setEditingField({ ...editingField, label: e.target.value })}
+                                                    variant="outlined"
+                                                />
+                                            </Grid>
+                                            <Grid item xs={12} sm={6}>
+                                                <TextField
+                                                    fullWidth
+                                                    label="Field Name"
+                                                    value={editingField.name}
+                                                    onChange={(e) => setEditingField({ ...editingField, name: e.target.value })}
+                                                    variant="outlined"
+                                                />
+                                            </Grid>
+                                            <Grid item xs={12}>
+                                                <TextField
+                                                    fullWidth
+                                                    label="Placeholder"
+                                                    value={editingField.placeholder || ''}
+                                                    onChange={(e) => setEditingField({ ...editingField, placeholder: e.target.value })}
+                                                    variant="outlined"
+                                                />
+                                            </Grid>
+                                            <Grid item xs={12}>
+                                                <TextField
+                                                    fullWidth
+                                                    label="Helper Text"
+                                                    value={editingField.helperText || ''}
+                                                    onChange={(e) => setEditingField({ ...editingField, helperText: e.target.value })}
+                                                    variant="outlined"
+                                                />
+                                            </Grid>
+                                            <Grid item xs={12}>
+                                                <FormControlLabel
+                                                    control={
+                                                        <Switch
+                                                            checked={editingField.required || false}
+                                                            onChange={(e) => setEditingField({ ...editingField, required: e.target.checked })}
+                                                            color="primary"
+                                                        />
+                                                    }
+                                                    label={
+                                                        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                                            <Typography variant="body1">Required Field</Typography>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                Make this field mandatory for form submission
+                                                            </Typography>
+                                                        </Box>
+                                                    }
+                                                />
+                                            </Grid>
+
+                                            {/* Options for select/radio/checkbox fields */}
+                                            {['select', 'multiselect', 'radio', 'checkbox'].includes(editingField.type) && (
+                                                <Grid item xs={12}>
+                                                    <Box sx={{ p: 3, backgroundColor: 'grey.50', borderRadius: 2 }}>
+                                                        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
+                                                            Field Options
+                                                        </Typography>
+                                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                                            Enter options one per line using format: value|label
+                                                        </Typography>
+                                                        <TextField
+                                                            fullWidth
+                                                            multiline
+                                                            rows={6}
+                                                            value={editingField.options?.map((opt) => `${opt.value}|${opt.label}`).join('\n') || ''}
+                                                            onChange={(e) => {
+                                                                const options = e.target.value.split('\n').filter(line => line.trim()).map(line => {
+                                                                    const [value, label] = line.split('|');
+                                                                    return { 
+                                                                        value: value?.trim() || '', 
+                                                                        label: label?.trim() || value?.trim() || '' 
+                                                                    };
+                                                                });
+                                                                setEditingField({ ...editingField, options });
+                                                            }}
+                                                            placeholder="option1|Option 1&#10;option2|Option 2&#10;option3|Option 3"
+                                                            helperText="Example: yes|Yes, no|No"
+                                                            variant="outlined"
+                                                            sx={{ backgroundColor: 'white' }}
+                                                        />
+                                                    </Box>
+                                                </Grid>
+                                            )}
+                                        </Grid>
+                                    </Box>
+                                )}
+                            </DialogContent>
+                            <DialogActions sx={{ p: 3, pt: 2 }}>
+                                <Button 
+                                    onClick={() => setEditDialogOpen(false)}
+                                    variant="outlined"
+                                    sx={{ px: 3 }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button 
+                                    onClick={saveFieldChanges} 
+                                    variant="contained" 
+                                    startIcon={<i className="material-icons">save</i>}
+                                    sx={{ px: 3 }}
+                                >
+                                    Save Changes
+                                </Button>
+                            </DialogActions>
+                        </Dialog>
+
+                        {/* Snackbar for notifications */}
+                        <Snackbar
+                            open={snackbar.open}
+                            autoHideDuration={3000}
+                            onClose={() => setSnackbar({ ...snackbar, open: false })}
+                        >
+                            <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+                                {snackbar.message}
+                            </Alert>
+                        </Snackbar>
+
+                        {/* Quick Actions FAB */}
+                        {!previewMode && (
+                            <Fab
+                                color="primary"
+                                sx={{ 
+                                    position: 'fixed', 
+                                    bottom: 32, 
+                                    right: 32,
+                                    width: 64,
+                                    height: 64,
+                                    boxShadow: theme.shadows[8],
+                                    '&:hover': {
+                                        transform: 'scale(1.1)',
+                                        boxShadow: theme.shadows[12],
+                                    }
+                                }}
+                                onClick={() => setPreviewMode(true)}
+                            >
+                                <i className="material-icons" style={{ fontSize: '28px' }}>preview</i>
+                            </Fab>
+                        )}
+
+                        {/* Instructions */}
+                        <Paper 
+                            elevation={2}
+                            sx={{ 
+                                p: 4, 
+                                mt: 4, 
+                                borderRadius: 3,
+                                background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(66, 165, 245, 0.05) 100%)',
+                                border: '1px solid',
+                                borderColor: 'primary.100'
+                            }}
+                        >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                                <Box 
+                                    sx={{ 
+                                        width: 48, 
+                                        height: 48, 
+                                        backgroundColor: 'primary.main',
+                                        borderRadius: 2,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: 'white'
+                                    }}
+                                >
+                                    <i className="material-icons" style={{ fontSize: '28px' }}>help_outline</i>
+                                </Box>
+                                <Typography variant="h5" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                                    How to Use This Demo
+                                </Typography>
+                            </Box>
+                            <Grid container spacing={4}>
+                                <Grid item xs={12} md={6}>
+                                    <Box sx={{ p: 3, backgroundColor: 'white', borderRadius: 2, height: '100%' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                                            <i className="material-icons" style={{ color: theme.palette.primary.main, fontSize: '24px' }}>
+                                                build_circle
+                                            </i>
+                                            <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 600 }}>
+                                                Building Forms
+                                            </Typography>
+                                        </Box>
+                                        <Box component="ul" sx={{ m: 0, pl: 3, '& li': { mb: 1 } }}>
+                                            <li>Drag field types from the palette to the builder area</li>
+                                            <li>Click the edit icon to customize field properties</li>
+                                            <li>Use the delete icon to remove unwanted fields</li>
+                                            <li>Fields can be reordered by dragging the drag handle</li>
+                                            <li>Copy form configuration to clipboard for reuse</li>
+                                        </Box>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <Box sx={{ p: 3, backgroundColor: 'white', borderRadius: 2, height: '100%' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                                            <i className="material-icons" style={{ color: theme.palette.primary.main, fontSize: '24px' }}>
+                                                preview
+                                            </i>
+                                            <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 600 }}>
+                                                Preview & Test
+                                            </Typography>
+                                        </Box>
+                                        <Box component="ul" sx={{ m: 0, pl: 3, '& li': { mb: 1 } }}>
+                                            <li>Click the preview button to see your form in action</li>
+                                            <li>Test validation, field interactions, and form submission</li>
+                                            <li>Form data is logged to console on submission</li>
+                                            <li>Switch back to builder to make more changes</li>
+                                            <li>Use the floating action button for quick preview</li>
+                                        </Box>
+                                    </Box>
+                                </Grid>
+                            </Grid>
+                        </Paper>
+                    </Container>
+                </ThemeProvider>
+            );
+        };
+
+        // Render the app
+        ReactDOM.render(<DragDropFormBuilder />, document.getElementById('root'));
+    </script>
+</body>
+</html>

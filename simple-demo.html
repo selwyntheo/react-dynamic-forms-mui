@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Dynamic Forms Demo</title>
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "@mui/material/styles": "https://esm.sh/@mui/material@5.14.0/styles",
+        "@mui/material": "https://esm.sh/@mui/material@5.14.0",
+        "@mui/material/CssBaseline": "https://esm.sh/@mui/material@5.14.0/CssBaseline",
+        "@mui/icons-material/ExpandMore": "https://esm.sh/@mui/icons-material@5.14.0/ExpandMore"
+      }
+    }
+    </script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        #root {
+            min-height: 100vh;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <h1>React Dynamic Forms Demo</h1>
+        <p>Loading React components...</p>
+    </div>
+    
+    <script type="module">
+        import React from 'react';
+        import { createRoot } from 'react-dom/client';
+
+        // Simple demo component to test React is working
+        function SimpleDemo() {
+            const [count, setCount] = React.useState(0);
+            
+            return React.createElement('div', null,
+                React.createElement('h2', null, 'React is Working!'),
+                React.createElement('p', null, `Count: ${count}`),
+                React.createElement('button', {
+                    onClick: () => setCount(count + 1)
+                }, 'Click me!')
+            );
+        }
+
+        const container = document.getElementById('root');
+        const root = createRoot(container);
+        root.render(React.createElement(SimpleDemo));
+    </script>
+</body>
+</html>
