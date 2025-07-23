@@ -72,13 +72,16 @@ export const DataGridFieldComponent: React.FC<DataGridFieldComponentProps> = ({
 
   // Initialize rows with IDs if they don't have them
   const ensureRowIds = useCallback((rows: any[]) => {
+    if (!Array.isArray(rows)) {
+      return [];
+    }
     return rows.map(row => ({
       ...row,
       id: row.id || generateRowId()
     }));
   }, []);
 
-  const currentValue = ensureRowIds(value);
+  const currentValue = ensureRowIds(value || field.initialRows || []);
 
   // Handle cell value changes
   const handleCellChange = (rowId: string, fieldName: string, newValue: any) => {
